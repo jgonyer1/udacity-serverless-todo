@@ -3,16 +3,18 @@ import 'source-map-support/register'
 
 import { verify, decode } from 'jsonwebtoken'
 import { createLogger } from '../../utils/logger'
-import Axios from 'axios'
+
 import { Jwt } from '../../auth/Jwt'
 import { JwtPayload } from '../../auth/JwtPayload'
+import * as jwks from "jwks-rsa";
 
 const logger = createLogger('auth')
 
-// TODO: Provide a URL that can be used to download a certificate that can be used
-// to verify JWT token signature.
-// To get this URL you need to go to an Auth0 page -> Show Advanced Settings -> Endpoints -> JSON Web Key Set
-const jwksUrl = '...'
+const jwksUrl = process.env.AUTH_0_JWKS_URL;
+const jwksClient = jwks({
+  strictSsl: true, // Default value
+  jwksUri: jwksUrl,
+});
 
 export const handler = async (
   event: CustomAuthorizerEvent
@@ -61,7 +63,21 @@ async function verifyToken(authHeader: string): Promise<JwtPayload> {
   // TODO: Implement token verification
   // You should implement it similarly to how it was implemented for the exercise for the lesson 5
   // You can read more about how to do this here: https://auth0.com/blog/navigating-rs256-and-jwks/
-  return undefined
+
+  //get jwks key first
+  const kid = jwt.header.kid;
+  let key;
+  jwksClient.getSigningKey(kid, (err, key) => { 
+    if(err){
+      console.error(err);
+    }
+    console.log("JWKS Client key: ", key);
+    key = key; 
+  });
+  //get the cert to verify
+
+  //verify
+  return verify(token, key.publicKey, { algorithms: ['RS256'] }) as JwtPayload
 }
 
 function getToken(authHeader: string): string {
