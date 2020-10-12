@@ -7,13 +7,15 @@ plugins:
 
 provider:
   name: aws
-  runtime: nodejs8.10
+  runtime: nodejs12.x
 
   stage: ${opt:stage, 'dev'}
   region: ${opt:region, 'us-east-1'}
   environment:
     AUTH_0_JWKS_URL: https://dev-xmbz3y4p.us.auth0.com/.well-known/jwks.json
-    TODOS_TABLE: Todos-${self:provider.stage}
+    TODOS_TABLE: Todo-${self:provider.stage}
+    TODO_DONE_INDEX: TodoDoneIndex
+    TODO_USER_ID_INDEX: TodoUserIdIndex
 
 
 functions:
@@ -28,6 +30,13 @@ functions:
       - http:
           method: get
           path: todos
+          authorizer: Auth
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+            - dynamodb:Scan
+        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}
+
 
   # TODO: Configure this function
   CreateTodo:
@@ -67,25 +76,34 @@ resources:
       Type: AWS::DynamoDB::Table
       Properties:
         AttributeDefinitions:
-          - AttributeName: partitionKey
+          - AttributeName: todoId
             AttributeType: S
-          - AttributeName: sortKey
+          - AttributeName: createdAt
             AttributeType: S
-          - AttributeName: indexKey
+          - AttributeName: userId
+            AttributeType: S
+          - AttributeName: done
             AttributeType: S
         KeySchema:
-          - AttributeName: partitionKey
+          - AttributeName: todoId
             KeyType: HASH
-          - AttributeName: sortKey
+          - AttributeName: createdAt
             KeyType: RANGE
         BillingMode: PAY_PER_REQUEST
         TableName: ${self:provider.environment.TODOS_TABLE}
-        LocalSecondaryIndexes:
-          - IndexName: ${self:provider.environment.INDEX_NAME}
+        GlobalSecondaryIndexes:
+          - IndexName: ${self:provider.environment.TODO_USER_ID_INDEX}
             KeySchema:
-              - AttributeName: partitionKey
+            - AttributeName: userId
+              KeyType: HASH
+            Projection:
+              ProjectionType: ALL
+        LocalSecondaryIndexes:
+          - IndexName: ${self:provider.environment.TODO_DONE_INDEX}
+            KeySchema:
+              - AttributeName: todoId
                 KeyType: HASH
-              - AttributeName: indexKey
+              - AttributeName: done
                 KeyType: RANGE
             Projection:
               ProjectionType: ALL # What attributes will be copied to an index

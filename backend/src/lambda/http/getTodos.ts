@@ -4,15 +4,11 @@ import {createDocClient} from "../http/utils";
 import { APIGatewayProxyEvent, APIGatewayProxyResult, APIGatewayProxyHandler } from 'aws-lambda'
 
 const docClient = createDocClient();
-
-export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEvent, partitionKeyValue: any): Promise<APIGatewayProxyResult> => {
-  const items = await docClient.query({
-    TableName: 'table-name',
-    IndexName: 'index-name',
-    KeyConditionExpression: 'paritionKey = :paritionKey',
-    ExpressionAttributeValues: {
-      ':paritionKey': partitionKeyValue
-    }
+const todosTable = process.env.TODOS_TABLE;
+export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
+  console.log("Processing event: ", event);
+  const items = await docClient.scan({
+    TableName: todosTable
   }).promise();
   return {
     statusCode: 200,
