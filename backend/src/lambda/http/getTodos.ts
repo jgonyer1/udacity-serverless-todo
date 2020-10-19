@@ -1,22 +1,18 @@
 import 'source-map-support/register'
-import {createDocClient} from "../http/utils";
+import {getTodosByUser} from "../../businessLogic/todos";
 
 import { APIGatewayProxyEvent, APIGatewayProxyResult, APIGatewayProxyHandler } from 'aws-lambda'
 
-const docClient = createDocClient();
-const todosTable = process.env.TODOS_TABLE;
 export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
   console.log("Processing event: ", event);
-  const items = await docClient.scan({
-    TableName: todosTable
-  }).promise();
+  const items = await getTodosByUser(event.headers.Authorization.split(' ')[1]);
   return {
     statusCode: 200,
     headers: {
-        'Access-Control-Allow-Origin': '*'
+      'Access-Control-Allow-Origin': '*'
     },
     body: JSON.stringify({
-        items
+        items: items
     })
-}
+  }
 }
