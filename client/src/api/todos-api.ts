@@ -70,5 +70,6 @@ export async function getUploadUrl(
 }
 
 export async function uploadFile(uploadUrl: string, file: Buffer): Promise<void> {
+  console.log("uploadUrl from server: ", uploadUrl);
   await Axios.put(uploadUrl, file)
 }
