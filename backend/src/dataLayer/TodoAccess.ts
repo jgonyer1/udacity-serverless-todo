@@ -2,6 +2,7 @@ import * as AWS  from 'aws-sdk'
 import { DocumentClient } from 'aws-sdk/clients/dynamodb';
 import * as AWSXRay from 'aws-xray-sdk'
 import { TodoItem } from "../models/TodoItem";
+import { UpdateTodoRequest } from '../requests/UpdateTodoRequest';
 const XAWS = AWSXRay.captureAWS(AWS)
 export class TodoAccess{
     constructor(
@@ -31,6 +32,14 @@ export class TodoAccess{
       return todoItem;
     }
 
+    async updateTodo(updateTodoItem: UpdateTodoRequest, todoId: string, userId: string): Promise<any>{
+      console.log("Updating todoItem with id: ", todoId);
+      console.log("Key for update: ", userId);
+      console.log("Update Expression: ", buildUpdateStatement(updateTodoItem));
+      console.log("Expression Values: ", getUpdateExpressionValues(updateTodoItem));
+      return {};
+    }
+
     async deleteTodo(todoId: string, userId: string): Promise<any>{
       console.log("DELETING TODO ID: ", todoId);
       return await this.docClient.delete({
@@ -39,10 +48,17 @@ export class TodoAccess{
           userId,
           todoId
         }
-      }).promise();
-      
+      }).promise(); 
     }
 }
+
+function buildUpdateStatement(todoItemUpdateInfo: any): string{
+  return  `SET ${Object.keys(todoItemUpdateInfo).map(key => `${key} = :${key}`).join(",")}`;
+}
+function getUpdateExpressionValues(todoItemUpdateInfo: any): any{
+  return Object.keys(todoItemUpdateInfo).reduce((accumulator, currentValue) => accumulator[`:${currentValue}`] = todoItemUpdateInfo[currentValue]);
+}
+
 function createDynamoDBClient() {
     if (process.env.IS_OFFLINE) {
       console.log('Creating a local DynamoDB instance')
