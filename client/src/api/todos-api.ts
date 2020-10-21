@@ -5,15 +5,12 @@ import Axios from 'axios'
 import { UpdateTodoRequest } from '../types/UpdateTodoRequest';
 
 export async function getTodos(idToken: string): Promise<Todo[]> {
-  console.log('Fetching todos')
-
   const response = await Axios.get(`${apiEndpoint}/todos`, {
     headers: {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${idToken}`
     },
   })
-  console.log('Todos:', response.data)
   return response.data.items
 }
 
@@ -27,7 +24,6 @@ export async function createTodo(
       'Authorization': `Bearer ${idToken}`
     }
   })
-  console.log("What we got back from api: ", response);
   return response.data.item
 }
 
@@ -70,6 +66,5 @@ export async function getUploadUrl(
 }
 
 export async function uploadFile(uploadUrl: string, file: Buffer): Promise<void> {
-  console.log("uploadUrl from server: ", uploadUrl);
   await Axios.put(uploadUrl, file)
 }
