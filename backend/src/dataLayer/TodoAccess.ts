@@ -9,7 +9,8 @@ const logger = createLogger("todoAccess");
 export class TodoAccess{
     constructor(
         private readonly docClient: DocumentClient = createDynamoDBClient(),
-        private readonly todosTable = process.env.TODOS_TABLE
+        private readonly todosTable = process.env.TODOS_TABLE,
+        private readonly imagesBucket = process.env.IMAGES_S3_BUCKET
     ){}
 
     async getTodosByUser(userId: string): Promise<TodoItem[]>{
@@ -34,6 +35,21 @@ export class TodoAccess{
         Item: todoItem
       }).promise();
       return todoItem;
+    }
+
+    async updateTodoAttachmentUrl(todoId:string, userId: string){
+      const updateExpression = "SET attachmentUrl = :url";
+      const expressionAttributeValues = { ":url": `https://${this.imagesBucket}.s3.amazonaws.com/${userId}_${todoId}` };
+
+      const result = await this.docClient.update({
+        TableName: this.todosTable,
+        Key: { userId, todoId },
+        UpdateExpression: updateExpression,
+        ExpressionAttributeValues: expressionAttributeValues,
+        ReturnValues: "UPDATED_NEW"
+      }).promise();
+      console.log("RETURNED FROM UPDATE: ", result);
+      return result;
     }
 
     async updateTodo(updateTodoItem: UpdateTodoRequest, todoId: string, userId: string): Promise<any>{
@@ -83,4 +99,4 @@ function createDynamoDBClient() {
     }
   
     return new XAWS.DynamoDB.DocumentClient()
-  }
+}

@@ -11,11 +11,12 @@ export class ImagesAccess{
   getSignedUrl(todoId: string, userId: string) {
     try{
       console.log(`geting signed url for user and todo: ${userId}_${todoId}`);
-      return s3.getSignedUrl('putObject', {
+      return  s3.getSignedUrl('putObject', {
         Bucket: this.imagesBucket,
         Key: `${userId}_${todoId}`,
         Expires: this.urlExpiration
-      })
+      });
+
     }catch(e){
       console.error(`${e}`);
     }

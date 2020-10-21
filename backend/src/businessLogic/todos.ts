@@ -27,3 +27,6 @@ export async function deleteTodo(todoId: string, jwtToken: string){
 export async function updateTodo(updateTodoRequest: UpdateTodoRequest, todoId: string, jwtToken: string){
     return await todoAccess.updateTodo(updateTodoRequest, todoId, parseUserId(jwtToken));
 }
+export async function updateTodoAttachmentUrl(todoId: string, jwtToken: string){
+    return await todoAccess.updateTodoAttachmentUrl(todoId, parseUserId(jwtToken));
+}
