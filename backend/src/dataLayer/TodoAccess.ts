@@ -41,15 +41,19 @@ export class TodoAccess{
       const updateExpression = "SET attachmentUrl = :url";
       const expressionAttributeValues = { ":url": `https://${this.imagesBucket}.s3.amazonaws.com/${userId}_${todoId}` };
 
-      const result = await this.docClient.update({
-        TableName: this.todosTable,
-        Key: { userId, todoId },
-        UpdateExpression: updateExpression,
-        ExpressionAttributeValues: expressionAttributeValues,
-        ReturnValues: "UPDATED_NEW"
-      }).promise();
-      console.log("RETURNED FROM UPDATE: ", result);
-      return result;
+      try{
+        const result = await this.docClient.update({
+          TableName: this.todosTable,
+          Key: { userId, todoId },
+          UpdateExpression: updateExpression,
+          ExpressionAttributeValues: expressionAttributeValues,
+          ReturnValues: "UPDATED_NEW"
+        }).promise();
+        return result;
+      }catch(e){
+        logger.error(`Failed to udpate attachment url for todoId: ${todoId}`)
+        return undefined;
+      }      
     }
 
     async updateTodo(updateTodoItem: UpdateTodoRequest, todoId: string, userId: string): Promise<any>{
